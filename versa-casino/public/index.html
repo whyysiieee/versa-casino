@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VERSA TEAM - Esports Casino v2.0</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,700;0,800;0,900;1,900&family=Rajdhani:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            versa: {
+              black: '#0A0B0E',
+              card: '#11141D',
+              cardborder: '#1A202C',
+              green: '#9FFE00',
+              greenhover: '#8CE000',
+              greendark: '#487300',
+              red: '#FF2E63',
+              purple: '#9D4EDD',
+              accent: '#161A26',
+            }
+          },
+          fontFamily: {
+            sans: ['Montserrat', 'sans-serif'],
+            cyber: ['Rajdhani', 'sans-serif'],
+          },
+          boxShadow: {
+            'versa-glow': '0 0 20px rgba(159, 254, 0, 0.35)',
+            'versa-glow-lg': '0 0 40px rgba(159, 254, 0, 0.55)',
+            'red-glow': '0 0 20px rgba(255, 46, 99, 0.45)',
+            'purple-glow': '0 0 20px rgba(157, 78, 221, 0.45)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #0A0B0E;
+      color: #FFFFFF;
+      font-family: 'Montserrat', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0A0B0E;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1A202C;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #9FFE00;
+    }
+
+    /* Versa Clip Corners */
+    .versa-clip {
+      clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(159, 254, 0, 0.2); }
+      50% { box-shadow: 0 0 32px rgba(159, 254, 0, 0.6); }
+    }
+    .animate-versa-pulse {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+
+    /* 3D Coinflip */
+    .coin-container { perspective: 1000px; }
+    .coin {
+      width: 140px;
+      height: 140px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .coin-side {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      backface-visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 4px solid #9FFE00;
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 20px rgba(159, 254, 0, 0.4);
+    }
+    .coin-front { background: linear-gradient(135deg, #11141D 0%, #1A202C 100%); }
+    .coin-back {
+      background: linear-gradient(135deg, #2A0813 0%, #11141D 100%);
+      border-color: #FF2E63;
+      transform: rotateY(180deg);
+      box-shadow: inset 0 0 15px rgba(0,0,0,0.8), 0 0 20px rgba(255, 46, 99, 0.4);
+    }
+
+    /* Slots Blur Effect */
+    .slot-spinning {
+      filter: blur(3px);
+      transition: filter 0.08s ease;
+    }
+
+    /* Shimmer Effect */
+    .shimmer-btn {
+      position: relative;
+      overflow: hidden;
+    }
+    .shimmer-btn::after {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(60deg, transparent 30%, rgba(255, 255, 255, 0.25) 50%, transparent 70%);
+      transform: rotate(30deg) translateX(-100%);
+      transition: transform 0.8s ease;
+    }
+    .shimmer-btn:hover::after {
+      transform: rotate(30deg) translateX(100%);
+    }
+
+    /* Mines Grid Tile Flip */
+    .mine-tile {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .mine-tile:hover:not(:disabled) {
+      transform: translateY(-2px);
+      border-color: #9FFE00;
+      box-shadow: 0 0 15px rgba(159, 254, 0, 0.3);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-versa-green selection:text-black">
+
+  <!-- Top Navigation Header -->
+  <header class="sticky top-0 z-50 bg-versa-black/95 backdrop-blur-md border-b border-versa-cardborder px-4 lg:px-8 py-3">
+    <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Logo & Brand -->
+      <div class="flex items-center space-x-3 cursor-pointer select-none" onclick="switchTab('crash')">
+        <div class="relative w-11 h-11 flex items-center justify-center bg-versa-card border border-versa-green/40 rounded-lg shadow-versa-glow">
+          <svg viewBox="0 0 200 200" class="w-9 h-9" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="100,10 175,75 145,100 185,145 100,190 15,145 55,100 25,75" fill="#60A800" />
+            <polygon points="100,20 168,80 140,100 175,140 100,180 25,140 60,100 32,80" fill="#9FFE00" />
+            <polygon points="100,88 108,100 100,112 92,100" fill="#0A0B0E" />
+            <polygon points="100,148 168,62 142,62 100,112 58,62 32,62" fill="#E2FF9E" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-baseline space-x-1">
+            <span class="font-black text-2xl tracking-tighter text-white">VERSA</span>
+            <span class="font-black text-2xl tracking-tighter text-versa-green">CASINO</span>
+          </div>
+          <p class="text-[10px] tracking-widest text-gray-400 font-cyber uppercase -mt-1">Official Esports Gaming Platform v2.0</p>
+        </div>
+      </div>
+
+      <!-- Live Stats & Wallet -->
+      <div class="flex items-center space-x-3 sm:space-x-4">
+        
+        <!-- Sound Toggle -->
+        <button id="soundToggleBtn" onclick="toggleAudio()" class="p-2.5 bg-versa-card hover:bg-versa-accent border border-versa-cardborder rounded-lg text-gray-300 hover:text-versa-green transition-all" title="Переключить звук">
+          <svg id="soundIconOn" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072M18.364 5.636a9 9 0 010 12.728M11 5L6 9H2v6h4l5 4V5z"/></svg>
+          <svg id="soundIconOff" class="w-5 h-5 hidden text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" clip-rule="evenodd"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+        </button>
+
+        <!-- Balance Card -->
+        <div class="flex items-center bg-versa-card border border-versa-green/40 rounded-lg px-3.5 py-1.5 shadow-versa-glow">
+          <div class="flex flex-col text-right pr-3 border-r border-versa-cardborder">
+            <span class="text-[9px] text-gray-400 font-cyber font-bold uppercase tracking-wider">БАЛАНС</span>
+            <div class="flex items-center space-x-1">
+              <span id="userBalance" class="font-cyber font-extrabold text-lg text-versa-green tracking-wide">10,000.00</span>
+              <span class="text-xs font-black text-versa-green">$VSC</span>
+            </div>
+          </div>
+          <button onclick="openDepositModal()" class="ml-3 bg-versa-green hover:bg-versa-greenhover text-black font-extrabold text-xs px-3 py-1.5 rounded uppercase tracking-wider shimmer-btn transition-transform active:scale-95">
+            Пополнить
+          </button>
+        </div>
+
+        <!-- Daily Reward -->
+        <button id="dailyRewardBtn" onclick="claimDailyReward()" class="hidden sm:flex items-center space-x-1.5 bg-versa-accent hover:border-versa-green border border-versa-cardborder text-xs text-versa-green font-extrabold px-3 py-2 rounded-lg transition-all">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V6a2 2 0 10-2 2h2zm0 13C10.832 19.877 8 16.657 8 12.5S10.832 5.123 12 5.123s4 3.235 4 7.377-2.832 7.377-4 7.377z"/></svg>
+          <span id="dailyBtnText">+1,000 $VSC</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 lg:px-8 py-6 w-full flex-1 flex flex-col gap-6">
+
+    <!-- Game Navigation Tabs -->
+    <div class="flex items-center space-x-2 border-b border-versa-cardborder pb-2 overflow-x-auto scrollbar-none">
+      <button id="tab-crash" onclick="switchTab('crash')" class="game-tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-wider bg-versa-green text-black shadow-versa-glow transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+        <span>VERSA CRASH</span>
+      </button>
+
+      <button id="tab-slots" onclick="switchTab('slots')" class="game-tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-wider bg-versa-card text-gray-400 border border-versa-cardborder hover:text-white transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2 1m0 0l-2-1m2 1v2.5M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1m2 1l-2 1m2-1v-2.5M18 18l2-1m-2 1l2 1m-2-1v-2.5"/></svg>
+        <span>CYBER SLOTS</span>
+      </button>
+
+      <button id="tab-coinflip" onclick="switchTab('coinflip')" class="game-tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-wider bg-versa-card text-gray-400 border border-versa-cardborder hover:text-white transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+        <span>VERSA COINFLIP</span>
+      </button>
+
+      <button id="tab-mines" onclick="switchTab('mines')" class="game-tab-btn flex items-center space-x-2 px-5 py-2.5 rounded-lg font-black text-sm uppercase tracking-wider bg-versa-card text-gray-400 border border-versa-cardborder hover:text-white transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        <span>CYBER MINES</span>
+      </button>
+    </div>
+
+    <!-- GAME 1: VERSA CRASH -->
+    <div id="game-crash" class="game-view grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Controls -->
+      <div class="lg:col-span-4 bg-versa-card border border-versa-cardborder rounded-xl p-5 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center border-b border-versa-cardborder pb-3">
+            <span class="text-xs font-bold text-gray-400 font-cyber uppercase tracking-wider">НАСТРОЙКА СТАВКИ</span>
+            <button onclick="openProvablyFairModal()" class="text-[10px] text-versa-green font-cyber px-2 py-0.5 bg-versa-green/10 border border-versa-green/30 rounded hover:bg-versa-green/20">PROVABLY FAIR 🔒</button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Сумма ставки ($VSC)</label>
+            <div class="relative">
+              <input type="number" id="crashBetAmount" value="100" min="10" max="100000" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-green rounded-lg px-3 py-2.5 font-cyber font-bold text-lg text-white outline-none transition-colors">
+              <div class="absolute right-1.5 top-1.5 flex space-x-1">
+                <button onclick="adjustBet('crashBetAmount', 0.5)" class="px-2 py-1 bg-versa-accent hover:bg-versa-cardborder text-xs font-bold text-gray-300 rounded">1/2</button>
+                <button onclick="adjustBet('crashBetAmount', 2)" class="px-2 py-1 bg-versa-accent hover:bg-versa-cardborder text-xs font-bold text-gray-300 rounded">2x</button>
+                <button onclick="setBet('crashBetAmount', 'MAX')" class="px-2 py-1 bg-versa-green/20 hover:bg-versa-green/30 text-xs font-bold text-versa-green rounded">MAX</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="addBet('crashBetAmount', 100)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+100</button>
+            <button onclick="addBet('crashBetAmount', 500)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+500</button>
+            <button onclick="addBet('crashBetAmount', 1000)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+1K</button>
+            <button onclick="addBet('crashBetAmount', 5000)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+5K</button>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Авто-вывод (Авто-кэшаут)</label>
+            <input type="number" id="crashAutoCashout" value="2.00" step="0.1" min="1.01" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-green rounded-lg px-3 py-2.5 font-cyber font-bold text-lg text-white outline-none transition-colors">
+          </div>
+
+          <div class="bg-versa-black/60 rounded-lg p-3 border border-versa-cardborder/60 space-y-1">
+            <div class="flex justify-between text-xs text-gray-400">
+              <span>РАСЧЕТНЫЙ ВЫИГРЫШ:</span>
+              <span id="crashEstPayout" class="font-cyber font-bold text-versa-green">200.00 $VSC</span>
+            </div>
+            <div class="flex justify-between text-xs text-gray-400">
+              <span>ЧИСТАЯ ПРИБЫЛЬ:</span>
+              <span id="crashEstProfit" class="font-cyber font-bold text-gray-200">+100.00 $VSC</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button id="crashActionButton" onclick="handleCrashAction()" class="w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-lg rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow transition-all active:scale-[0.98]">
+            СДЕЛАТЬ СТАВКУ НА СЛЕД. РАУНД
+          </button>
+        </div>
+      </div>
+
+      <!-- Crash Display Area -->
+      <div class="lg:col-span-8 bg-versa-card border border-versa-cardborder rounded-xl p-4 flex flex-col justify-between relative overflow-hidden min-h-[380px]">
+        <div class="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-none z-10">
+          <span class="text-[10px] font-cyber font-bold text-gray-400 uppercase tracking-widest mr-1">ИСТОРИЯ:</span>
+          <div id="crashHistory" class="flex space-x-1.5"></div>
+        </div>
+
+        <div class="relative flex-1 w-full flex items-center justify-center my-2">
+          <canvas id="crashCanvas" class="w-full h-full absolute inset-0 rounded-lg bg-versa-black/80"></canvas>
+          <div class="relative z-10 text-center pointer-events-none select-none">
+            <div id="crashMultiplierText" class="font-cyber font-extrabold text-6xl sm:text-7xl text-white tracking-tight drop-shadow-lg">1.00x</div>
+            <div id="crashStatusText" class="text-xs font-black uppercase tracking-widest text-versa-green mt-1">ОЖИДАНИЕ СЛЕДУЮЩЕГО РАУНДА...</div>
+          </div>
+        </div>
+
+        <div class="z-10 flex justify-between items-center text-xs text-gray-400 border-t border-versa-cardborder/80 pt-3">
+          <div class="flex items-center space-x-2">
+            <span class="w-2 h-2 rounded-full bg-versa-green animate-ping"></span>
+            <span>СЕТЬ: <strong class="text-white">VERSA REALTIME ENGINE</strong></span>
+          </div>
+          <div>ИГРОКОВ В СЕТИ: <strong id="crashActiveCount" class="text-versa-green">58</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 2: CYBER SLOTS -->
+    <div id="game-slots" class="game-view hidden grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-4 bg-versa-card border border-versa-cardborder rounded-xl p-5 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center border-b border-versa-cardborder pb-3">
+            <span class="text-xs font-bold text-gray-400 font-cyber uppercase tracking-wider">УПРАВЛЕНИЕ СЛОТАМИ</span>
+            <span class="text-[10px] text-versa-green font-cyber px-2 py-0.5 bg-versa-green/10 border border-versa-green/30 rounded">RTP 98.5%</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Ставка за спин ($VSC)</label>
+            <input type="number" id="slotsBetAmount" value="50" min="10" max="50000" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-green rounded-lg px-3 py-2.5 font-cyber font-bold text-lg text-white outline-none transition-colors">
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="setBet('slotsBetAmount', 25)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">25</button>
+            <button onclick="setBet('slotsBetAmount', 100)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">100</button>
+            <button onclick="setBet('slotsBetAmount', 500)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">500</button>
+            <button onclick="setBet('slotsBetAmount', 'MAX')" class="py-1.5 bg-versa-green/20 hover:bg-versa-green/30 text-xs font-bold text-versa-green rounded">MAX</button>
+          </div>
+
+          <div class="bg-versa-black/60 rounded-lg p-3 border border-versa-cardborder/60 text-xs space-y-2">
+            <div class="font-bold text-gray-300 border-b border-versa-cardborder pb-1 uppercase">Таблица выплат</div>
+            <div class="flex justify-between items-center text-gray-400"><span>3x VERSA ⚡</span><span class="font-cyber font-bold text-versa-green">50x</span></div>
+            <div class="flex justify-between items-center text-gray-400"><span>3x КУБОК 🏆</span><span class="font-cyber font-bold text-versa-green">20x</span></div>
+            <div class="flex justify-between items-center text-gray-400"><span>3x НОЖ 🔪</span><span class="font-cyber font-bold text-versa-green">15x</span></div>
+            <div class="flex justify-between items-center text-gray-400"><span>3x КОРОНА 👑</span><span class="font-cyber font-bold text-versa-green">10x</span></div>
+            <div class="flex justify-between items-center text-gray-400"><span>ЛЮБЫЕ 2 СОВПАДЕНИЯ</span><span class="font-cyber font-bold text-gray-200">1.5x</span></div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button id="spinSlotsBtn" onclick="spinSlots()" class="w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow transition-all active:scale-[0.98]">
+            КРУТИТЬ БАРАБАНЫ 🎰
+          </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 bg-versa-card border border-versa-cardborder rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden min-h-[380px]">
+        <div class="text-center mb-6">
+          <h2 class="text-3xl font-black tracking-tight text-white flex items-center justify-center gap-2">
+            <span class="text-versa-green">CYBER</span> SLOTS
+          </h2>
+          <p class="text-xs text-gray-400 font-cyber">СОБЕРИТЕ 3 СИМВОЛА ДЛЯ МАКСИМАЛЬНОГО ДЖЕКПОТА</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 sm:gap-6 bg-versa-black border-2 border-versa-green/40 p-4 sm:p-6 rounded-2xl shadow-versa-glow w-full max-w-lg relative">
+          <div class="absolute inset-x-0 top-1/2 -translate-y-1/2 h-20 sm:h-24 border-y-2 border-versa-green/60 bg-versa-green/5 pointer-events-none"></div>
+
+          <div class="bg-versa-card border border-versa-cardborder rounded-xl h-28 sm:h-36 flex items-center justify-center text-4xl sm:text-5xl overflow-hidden relative shadow-inner">
+            <div id="reel1" class="transition-all duration-300 font-extrabold flex items-center justify-center">⚡</div>
+          </div>
+          <div class="bg-versa-card border border-versa-cardborder rounded-xl h-28 sm:h-36 flex items-center justify-center text-4xl sm:text-5xl overflow-hidden relative shadow-inner">
+            <div id="reel2" class="transition-all duration-300 font-extrabold flex items-center justify-center">🏆</div>
+          </div>
+          <div class="bg-versa-card border border-versa-cardborder rounded-xl h-28 sm:h-36 flex items-center justify-center text-4xl sm:text-5xl overflow-hidden relative shadow-inner">
+            <div id="reel3" class="transition-all duration-300 font-extrabold flex items-center justify-center">👑</div>
+          </div>
+        </div>
+
+        <div id="slotsWinBanner" class="mt-6 text-center h-10 flex items-center justify-center">
+          <span class="text-sm font-cyber text-gray-400 tracking-widest">НАЖМИТЕ КРУТИТЬ ДЛЯ ИГРЫ</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 3: VERSA COINFLIP -->
+    <div id="game-coinflip" class="game-view hidden grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-4 bg-versa-card border border-versa-cardborder rounded-xl p-5 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center border-b border-versa-cardborder pb-3">
+            <span class="text-xs font-bold text-gray-400 font-cyber uppercase tracking-wider">СТАВКА НА COINFLIP</span>
+            <span class="text-[10px] text-versa-green font-cyber px-2 py-0.5 bg-versa-green/10 border border-versa-green/30 rounded">МНОЖИТЕЛЬ 1.98x</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-2 uppercase">ВЫБЕРИТЕ СТОРОНУ</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button id="sideBtnGreen" onclick="selectCoinSide('green')" class="p-3 bg-versa-accent border-2 border-versa-green rounded-xl flex flex-col items-center justify-center transition-all shadow-versa-glow">
+                <div class="w-8 h-8 rounded-full bg-versa-green/20 border border-versa-green flex items-center justify-center font-black text-versa-green text-xs mb-1">V</div>
+                <span class="text-xs font-black text-white">VERSA GREEN</span>
+              </button>
+
+              <button id="sideBtnRed" onclick="selectCoinSide('red')" class="p-3 bg-versa-accent border-2 border-versa-cardborder hover:border-versa-red rounded-xl flex flex-col items-center justify-center transition-all opacity-60">
+                <div class="w-8 h-8 rounded-full bg-versa-red/20 border border-versa-red flex items-center justify-center font-black text-versa-red text-xs mb-1">R</div>
+                <span class="text-xs font-black text-white">CYBER RED</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Сумма ставки ($VSC)</label>
+            <input type="number" id="coinflipBetAmount" value="100" min="10" max="50000" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-green rounded-lg px-3 py-2.5 font-cyber font-bold text-lg text-white outline-none transition-colors">
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <button onclick="addBet('coinflipBetAmount', 100)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+100</button>
+            <button onclick="addBet('coinflipBetAmount', 500)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">+500</button>
+            <button onclick="adjustBet('coinflipBetAmount', 2)" class="py-1.5 bg-versa-accent hover:border-gray-500 border border-versa-cardborder rounded text-xs font-bold text-gray-300">2x</button>
+            <button onclick="setBet('coinflipBetAmount', 'MAX')" class="py-1.5 bg-versa-green/20 hover:bg-versa-green/30 text-xs font-bold text-versa-green rounded">MAX</button>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button id="flipCoinBtn" onclick="flipCoin()" class="w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow transition-all active:scale-[0.98]">
+            БРОСИТЬ МОНЕТУ 🪙
+          </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 bg-versa-card border border-versa-cardborder rounded-xl p-6 flex flex-col items-center justify-center relative overflow-hidden min-h-[380px]">
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-black tracking-tight text-white">VERSA <span class="text-versa-green">COINFLIP</span></h2>
+          <p class="text-xs text-gray-400 font-cyber">50/50 МГНОВЕННЫЙ МИНИ-ДУЭЛЬ</p>
+        </div>
+
+        <div class="coin-container mb-8">
+          <div id="coinElement" class="coin">
+            <div class="coin-side coin-front">
+              <div class="flex flex-col items-center">
+                <span class="text-2xl font-black text-versa-green font-cyber">VERSA</span>
+              </div>
+            </div>
+            <div class="coin-side coin-back">
+              <div class="flex flex-col items-center">
+                <span class="text-2xl font-black text-versa-red font-cyber">RED</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="coinStatusText" class="text-sm font-cyber font-bold text-gray-300 tracking-wider">
+          ВЫБЕРИТЕ СТОРОНУ И СДЕЛАЙТЕ СТАВКУ
+        </div>
+      </div>
+    </div>
+
+    <!-- GAME 4: CYBER MINES (НОВЫЙ РЕЖИМ) -->
+    <div id="game-mines" class="game-view hidden grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-4 bg-versa-card border border-versa-cardborder rounded-xl p-5 flex flex-col justify-between">
+        <div class="space-y-4">
+          <div class="flex justify-between items-center border-b border-versa-cardborder pb-3">
+            <span class="text-xs font-bold text-gray-400 font-cyber uppercase tracking-wider">НАСТРОЙКА МИН</span>
+            <span class="text-[10px] text-versa-purple font-cyber px-2 py-0.5 bg-versa-purple/10 border border-versa-purple/30 rounded">ТАКТИЧЕСКИЙ РЕЖИМ</span>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Количество мин (1-24)</label>
+            <select id="minesCount" onchange="updateMinesInfo()" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-purple rounded-lg px-3 py-2.5 font-cyber font-bold text-white outline-none">
+              <option value="1">1 Мина (Низкий риск)</option>
+              <option value="3" selected>3 Мины (Сбалансировано)</option>
+              <option value="5">5 Мин (Средний риск)</option>
+              <option value="10">10 Мин (Высокий риск)</option>
+              <option value="15">15 Мин (Экстремально)</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">Сумма ставки ($VSC)</label>
+            <input type="number" id="minesBetAmount" value="100" min="10" max="50000" class="w-full bg-versa-black border border-versa-cardborder focus:border-versa-purple rounded-lg px-3 py-2.5 font-cyber font-bold text-lg text-white outline-none">
+          </div>
+
+          <div class="bg-versa-black/60 rounded-lg p-3 border border-versa-cardborder/60 text-xs space-y-1">
+            <div class="flex justify-between text-gray-400">
+              <span>ТЕКУЩИЙ МНОЖИТЕЛЬ:</span>
+              <span id="minesCurrentMult" class="font-cyber font-bold text-versa-purple">1.00x</span>
+            </div>
+            <div class="flex justify-between text-gray-400">
+              <span>СЛЕДУЮЩИЙ ШАГ:</span>
+              <span id="minesNextMult" class="font-cyber font-bold text-gray-200">1.12x</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button id="minesStartBtn" onclick="startMinesGame()" class="w-full py-4 bg-versa-purple hover:bg-purple-600 text-white font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-purple-glow transition-all active:scale-[0.98]">
+            НАЧАТЬ ИГРУ 💣
+          </button>
+        </div>
+      </div>
+
+      <div class="lg:col-span-8 bg-versa-card border border-versa-cardborder rounded-xl p-6 flex flex-col items-center justify-center relative min-h-[380px]">
+        <div class="text-center mb-4">
+          <h2 class="text-2xl font-black text-white">CYBER <span class="text-versa-purple">MINES</span></h2>
+          <p class="text-xs text-gray-400 font-cyber">ОТКРЫВАЙТЕ КЛЕТКИ И ЗАБИРАЙТЕ ВЫИГРЫШ В ЛЮБОЙ МОМЕНТ</p>
+        </div>
+
+        <!-- 5x5 Grid -->
+        <div id="minesGrid" class="grid grid-cols-5 gap-2.5 sm:gap-3 w-full max-w-md p-3 bg-versa-black/80 rounded-2xl border border-versa-cardborder">
+          <!-- Dynamically populated via JS -->
+        </div>
+
+        <div id="minesStatusText" class="mt-4 text-sm font-cyber font-bold text-gray-300">
+          УКАЖИТЕ СТАВКУ И НАЖМИТЕ "НАЧАТЬ ИГРУ"
+        </div>
+      </div>
+    </div>
+
+    <!-- Live Community Bets Feed -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-8 bg-versa-card border border-versa-cardborder rounded-xl p-5">
+        <div class="flex justify-between items-center mb-4">
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-versa-green animate-pulse"></span>
+            <h3 class="font-black text-sm uppercase tracking-wider text-white">ЛАЙВ СТАВКИ СООБЩЕСТВА</h3>
+          </div>
+          <span class="text-[10px] text-gray-400 font-cyber">ОБНОВЛЕНИЕ В РЕАЛЬНОМ ВРЕМЕНИ</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-versa-cardborder text-[11px] font-cyber font-bold text-gray-400 uppercase">
+                <th class="pb-2">ИГРОК</th>
+                <th class="pb-2">ИГРА</th>
+                <th class="pb-2">СТАВКА</th>
+                <th class="pb-2">КОЭФ.</th>
+                <th class="pb-2 text-right">ВЫПЛАТА</th>
+              </tr>
+            </thead>
+            <tbody id="liveBetsBody" class="text-xs divide-y divide-versa-cardborder/50"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- High Rollers Leaderboard -->
+      <div class="lg:col-span-4 bg-versa-card border border-versa-cardborder rounded-xl p-5 flex flex-col justify-between">
+        <div>
+          <div class="flex justify-between items-center mb-4 border-b border-versa-cardborder pb-2">
+            <h3 class="font-black text-sm uppercase tracking-wider text-white flex items-center gap-1.5">
+              <span>🏆</span> ТОП ИГРОКОВ НЕДЕЛИ
+            </h3>
+            <span class="text-[10px] text-versa-green font-cyber">РЕЙТИНГ</span>
+          </div>
+          <div id="leaderboardList" class="space-y-2.5"></div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-versa-cardborder flex justify-between items-center text-[11px] text-gray-400 font-cyber">
+          <span>ВАШ РАНГ: <strong class="text-versa-green">#12</strong></span>
+          <span>ВСЕГО ИГРОКОВ: <strong class="text-white">2,190</strong></span>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Refill Modal -->
+  <div id="depositModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-versa-card border border-versa-green/40 rounded-2xl p-6 max-w-md w-full shadow-versa-glow-lg relative animate-versa-pulse">
+      <button onclick="closeDepositModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+
+      <div class="text-center mb-6">
+        <h3 class="text-2xl font-black uppercase text-white">ПОПОЛНЕНИЕ $VSC</h3>
+        <p class="text-xs text-gray-400 font-cyber mt-1">БЕСПЛАТНЫЙ ТЕСТОВЫЙ БАЛАНС ДЛЯ ИГРЫ</p>
+      </div>
+
+      <div class="space-y-3">
+        <button onclick="addFreeCoins(1000)" class="w-full py-3 bg-versa-accent hover:bg-versa-cardborder border border-versa-green/30 rounded-xl font-bold text-sm text-versa-green flex justify-between items-center px-4 transition-all">
+          <span>+1,000 $VSC</span>
+          <span class="text-xs text-gray-400 font-cyber">БЕСПЛАТНО</span>
+        </button>
+        <button onclick="addFreeCoins(5000)" class="w-full py-3 bg-versa-accent hover:bg-versa-cardborder border border-versa-green/30 rounded-xl font-bold text-sm text-versa-green flex justify-between items-center px-4 transition-all">
+          <span>+5,000 $VSC</span>
+          <span class="text-xs text-gray-400 font-cyber">БЕСПЛАТНО</span>
+        </button>
+        <button onclick="addFreeCoins(10000)" class="w-full py-3 bg-versa-green hover:bg-versa-greenhover text-black rounded-xl font-black text-sm flex justify-between items-center px-4 shimmer-btn transition-all">
+          <span>+10,000 $VSC МАКСИМУМ</span>
+          <span class="text-xs font-cyber">ХИТ</span>
+        </button>
+      </div>
+
+      <div class="mt-6 pt-4 border-t border-versa-cardborder">
+        <label class="block text-xs font-bold text-gray-300 mb-1.5 uppercase">ПРОМОКОД</label>
+        <div class="flex space-x-2">
+          <input type="text" id="promoInput" placeholder="Введите VERSA2026" class="flex-1 bg-versa-black border border-versa-cardborder rounded-lg px-3 py-2 text-xs font-cyber text-white outline-none focus:border-versa-green">
+          <button onclick="applyPromoCode()" class="bg-versa-accent hover:bg-versa-cardborder border border-versa-cardborder text-xs font-bold px-4 py-2 rounded-lg text-versa-green">ПРИМЕНИТЬ</button>
+        </div>
+        <p id="promoMessage" class="text-[10px] mt-1.5 hidden font-cyber"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Provably Fair Modal -->
+  <div id="pfModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-versa-card border border-versa-green/40 rounded-2xl p-6 max-w-md w-full shadow-versa-glow relative">
+      <button onclick="closeProvablyFairModal()" class="absolute top-4 right-4 text-gray-400 hover:text-white">✕</button>
+      <h3 class="text-xl font-black uppercase text-white mb-2">PROVABLY FAIR 🔒</h3>
+      <p class="text-xs text-gray-400 font-cyber mb-4">Все результаты генерируются на основе SHA-256 хэша до начала раунда.</p>
+      
+      <div class="space-y-3 text-xs font-cyber">
+        <div>
+          <label class="text-gray-400">Server Seed Hash (SHA256):</label>
+          <input type="text" readonly value="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855" class="w-full bg-versa-black border border-versa-cardborder p-2 rounded text-gray-300">
+        </div>
+        <div>
+          <label class="text-gray-400">Client Seed:</label>
+          <input type="text" id="clientSeedInput" value="versa_client_seed_2026" class="w-full bg-versa-black border border-versa-cardborder p-2 rounded text-white">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="border-t border-versa-cardborder bg-versa-black py-4 px-4 text-center text-xs text-gray-400 font-cyber mt-8">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2">
+      <div>© 2026 <strong>VERSA TEAM ESPORTS</strong>. ВСЕ ПРАВА Защищены.</div>
+      <div class="flex space-x-4 text-[11px]">
+        <span class="hover:text-versa-green cursor-pointer" onclick="openDepositModal()">ПОПОЛНЕНИЕ</span>
+        <span>•</span>
+        <span class="text-versa-green font-bold">PROVABLY FAIR SYSTEM</span>
+        <span>•</span>
+        <span class="hover:text-versa-green cursor-pointer">ПОДДЕРЖКА</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JAVASCRIPT GAME ENGINE -->
+  <script>
+    const state = {
+      balance: 10000.00,
+      soundEnabled: true,
+      selectedTab: 'crash',
+      dailyClaimed: false,
+
+      crash: {
+        status: 'WAITING',
+        multiplier: 1.00,
+        crashPoint: 1.00,
+        userBet: 0,
+        userCashout: null,
+        autoCashout: 2.00,
+        startTime: 0,
+        history: [1.42, 2.15, 1.08, 12.40, 3.82, 1.95, 1.12, 5.20]
+      },
+
+      slots: {
+        isSpinning: false,
+        symbols: ['⚡', '🏆', '🔪', '👑', '7️⃣', '💎'],
+        payMultipliers: { '⚡': 50, '🏆': 20, '🔪': 15, '👑': 10, '7️⃣': 5, '💎': 3 }
+      },
+
+      coinflip: {
+        selectedSide: 'green',
+        isFlipping: false
+      },
+
+      mines: {
+        active: false,
+        minesCount: 3,
+        betAmount: 100,
+        revealedCount: 0,
+        minePositions: [],
+        currentMult: 1.00
+      }
+    };
+
+    /* Audio Synth */
+    class AudioEngine {
+      constructor() { this.ctx = null; }
+      init() { if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)(); }
+      
+      playClick() {
+        if (!state.soundEnabled) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.04);
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.04);
+        } catch(e){}
+      }
+
+      playWin() {
+        if (!state.soundEnabled) return;
+        this.init();
+        try {
+          [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.07);
+            gain.gain.setValueAtTime(0.12, this.ctx.currentTime + idx * 0.07);
+            gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.07 + 0.25);
+            osc.connect(gain); gain.connect(this.ctx.destination);
+            osc.start(this.ctx.currentTime + idx * 0.07);
+            osc.stop(this.ctx.currentTime + idx * 0.07 + 0.25);
+          });
+        } catch(e){}
+      }
+
+      playCrashSound() {
+        if (!state.soundEnabled) return;
+        this.init();
+        try {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(30, this.ctx.currentTime + 0.35);
+          gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.35);
+        } catch(e){}
+      }
+    }
+
+    const audio = new AudioEngine();
+
+    function toggleAudio() {
+      state.soundEnabled = !state.soundEnabled;
+      document.getElementById('soundIconOn').classList.toggle('hidden', !state.soundEnabled);
+      document.getElementById('soundIconOff').classList.toggle('hidden', state.soundEnabled);
+    }
+
+    function updateBalanceDisplay() {
+      document.getElementById('userBalance').innerText = state.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function switchTab(tab) {
+      audio.playClick();
+      state.selectedTab = tab;
+      
+      document.querySelectorAll('.game-view').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.game-tab-btn').forEach(btn => {
+        btn.classList.remove('bg-versa-green', 'text-black', 'shadow-versa-glow');
+        btn.classList.add('bg-versa-card', 'text-gray-400');
+      });
+
+      const activeView = document.getElementById(`game-${tab}`);
+      if (activeView) activeView.classList.remove('hidden'), activeView.classList.add('grid');
+
+      const activeBtn = document.getElementById(`tab-${tab}`);
+      if (activeBtn) {
+        activeBtn.classList.remove('bg-versa-card', 'text-gray-400');
+        activeBtn.classList.add('bg-versa-green', 'text-black', 'shadow-versa-glow');
+      }
+    }
+
+    function adjustBet(inputId, factor) {
+      audio.playClick();
+      const input = document.getElementById(inputId);
+      let val = parseFloat(input.value) || 0;
+      input.value = Math.max(10, Math.floor(val * factor));
+    }
+
+    function addBet(inputId, delta) {
+      audio.playClick();
+      const input = document.getElementById(inputId);
+      let val = parseFloat(input.value) || 0;
+      input.value = Math.max(10, val + delta);
+    }
+
+    function setBet(inputId, mode) {
+      audio.playClick();
+      const input = document.getElementById(inputId);
+      input.value = (mode === 'MAX') ? Math.floor(state.balance) : mode;
+    }
+
+    /* Modals */
+    function openDepositModal() { audio.playClick(); document.getElementById('depositModal').classList.remove('hidden'); document.getElementById('depositModal').classList.add('flex'); }
+    function closeDepositModal() { audio.playClick(); document.getElementById('depositModal').classList.add('hidden'); document.getElementById('depositModal').classList.remove('flex'); }
+    function openProvablyFairModal() { document.getElementById('pfModal').classList.remove('hidden'); document.getElementById('pfModal').classList.add('flex'); }
+    function closeProvablyFairModal() { document.getElementById('pfModal').classList.add('hidden'); document.getElementById('pfModal').classList.remove('flex'); }
+
+    function addFreeCoins(amount) {
+      audio.playWin();
+      state.balance += amount;
+      updateBalanceDisplay();
+      closeDepositModal();
+      pushLiveBetRow('ВЫ', 'БОНУС ПОПОЛНЕНИЯ', 0, 1.0, amount, true);
+    }
+
+    function claimDailyReward() {
+      if (state.dailyClaimed) return;
+      audio.playWin();
+      state.balance += 1000;
+      state.dailyClaimed = true;
+      updateBalanceDisplay();
+      document.getElementById('dailyRewardBtn').classList.add('opacity-50', 'cursor-not-allowed');
+      document.getElementById('dailyBtnText').innerText = 'ПОЛУЧЕНО';
+    }
+
+    function applyPromoCode() {
+      const code = document.getElementById('promoInput').value.trim().toUpperCase();
+      const msg = document.getElementById('promoMessage');
+      msg.classList.remove('hidden', 'text-versa-green', 'text-red-500');
+
+      if (code === 'VERSA2026' || code === 'VERSA') {
+        audio.playWin();
+        state.balance += 5000;
+        updateBalanceDisplay();
+        msg.classList.add('text-versa-green');
+        msg.innerText = 'ПРОМОКОД АКТИВИРОВАН! +5,000 $VSC';
+      } else {
+        msg.classList.add('text-red-500');
+        msg.innerText = 'НЕВЕРНЫЙ ПРОМОКОД. ПОПРОБУЙТЕ "VERSA2026"';
+      }
+    }
+
+    /* Game 1: Crash Canvas */
+    const crashCanvas = document.getElementById('crashCanvas');
+    const crashCtx = crashCanvas ? crashCanvas.getContext('2d') : null;
+
+    function resizeCanvas() {
+      if (!crashCanvas) return;
+      crashCanvas.width = crashCanvas.parentElement.clientWidth;
+      crashCanvas.height = crashCanvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    setTimeout(resizeCanvas, 100);
+
+    function startCrashLoop() {
+      state.crash.status = 'WAITING';
+      state.crash.multiplier = 1.00;
+      state.crash.userCashout = null;
+      state.crash.crashPoint = Math.max(1.01, parseFloat((100 / (100 - Math.random() * 96)).toFixed(2)));
+
+      document.getElementById('crashMultiplierText').className = 'font-cyber font-extrabold text-6xl sm:text-7xl text-white tracking-tight drop-shadow-lg';
+      document.getElementById('crashMultiplierText').innerText = '1.00x';
+      document.getElementById('crashStatusText').innerText = 'ОЖИДАНИЕ СЛЕДУЮЩЕГО РАУНДА...';
+      
+      const btn = document.getElementById('crashActionButton');
+      btn.innerText = 'СДЕЛАТЬ СТАВКУ НА СЛЕД. РАУНД';
+      btn.className = 'w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-lg rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow transition-all active:scale-[0.98]';
+
+      let countdown = 3;
+      const countInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+          document.getElementById('crashStatusText').innerText = `СТАРТ ЧЕРЕЗ ${countdown}С...`;
+        } else {
+          clearInterval(countInterval);
+          launchCrashRound();
+        }
+      }, 1000);
+    }
+
+    function launchCrashRound() {
+      state.crash.status = 'FLYING';
+      state.crash.startTime = Date.now();
+      document.getElementById('crashStatusText').innerText = 'РАКЕТА В ПОЛЕТЕ...';
+
+      if (state.crash.userBet > 0) {
+        const btn = document.getElementById('crashActionButton');
+        btn.innerText = 'ЗАБРАТЬ ВЫИГРЫШ (CASH OUT)';
+        btn.className = 'w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow animate-pulse transition-all active:scale-[0.98]';
+      }
+
+      const crashInterval = setInterval(() => {
+        if (state.crash.status !== 'FLYING') { clearInterval(crashInterval); return; }
+
+        const elapsed = (Date.now() - state.crash.startTime) / 1000;
+        state.crash.multiplier = parseFloat((Math.pow(Math.E, 0.08 * elapsed)).toFixed(2));
+        document.getElementById('crashMultiplierText').innerText = state.crash.multiplier.toFixed(2) + 'x';
+
+        const autoCash = parseFloat(document.getElementById('crashAutoCashout').value) || 2.0;
+        if (state.crash.userBet > 0 && !state.crash.userCashout && state.crash.multiplier >= autoCash) {
+          cashoutUser();
+        }
+
+        renderCrashCanvas();
+
+        if (state.crash.multiplier >= state.crash.crashPoint) {
+          clearInterval(crashInterval);
+          triggerCrash();
+        }
+      }, 50);
+    }
+
+    function triggerCrash() {
+      state.crash.status = 'CRASHED';
+      audio.playCrashSound();
+
+      document.getElementById('crashMultiplierText').innerText = state.crash.crashPoint.toFixed(2) + 'x';
+      document.getElementById('crashMultiplierText').className = 'font-cyber font-extrabold text-6xl sm:text-7xl text-versa-red tracking-tight drop-shadow-lg';
+      document.getElementById('crashStatusText').innerText = 'РАУНД ВЗОРВАЛСЯ!';
+
+      if (state.crash.userBet > 0 && !state.crash.userCashout) {
+        pushLiveBetRow('ВЫ', 'VERSA CRASH', state.crash.userBet, state.crash.crashPoint, 0, false);
+      }
+
+      state.crash.history.unshift(state.crash.crashPoint);
+      if (state.crash.history.length > 8) state.crash.history.pop();
+      renderCrashHistory();
+
+      state.crash.userBet = 0;
+      renderCrashCanvas();
+      setTimeout(startCrashLoop, 3500);
+    }
+
+    function handleCrashAction() {
+      if (state.crash.status === 'WAITING') {
+        const betAmt = parseFloat(document.getElementById('crashBetAmount').value) || 0;
+        if (betAmt <= 0 || betAmt > state.balance) { openDepositModal(); return; }
+        audio.playClick();
+        state.balance -= betAmt;
+        state.crash.userBet = betAmt;
+        updateBalanceDisplay();
+
+        const btn = document.getElementById('crashActionButton');
+        btn.innerText = 'СТАВКА ПРИНЯТА (ОЖИДАНИЕ...)';
+        btn.className = 'w-full py-4 bg-versa-accent border border-versa-green text-versa-green font-black text-lg rounded-xl uppercase tracking-wider opacity-80 cursor-not-allowed';
+      } else if (state.crash.status === 'FLYING' && state.crash.userBet > 0 && !state.crash.userCashout) {
+        cashoutUser();
+      }
+    }
+
+    function cashoutUser() {
+      if (state.crash.userCashout) return;
+      audio.playWin();
+      const mult = state.crash.multiplier;
+      const payout = state.crash.userBet * mult;
+      state.balance += payout;
+      state.crash.userCashout = mult;
+      updateBalanceDisplay();
+
+      pushLiveBetRow('ВЫ', 'VERSA CRASH', state.crash.userBet, mult, payout, true);
+
+      const btn = document.getElementById('crashActionButton');
+      btn.innerText = `ВЫИГРЫШ: +${payout.toFixed(2)} $VSC`;
+      btn.className = 'w-full py-4 bg-versa-accent border-2 border-versa-green text-versa-green font-black text-lg rounded-xl uppercase tracking-wider shadow-versa-glow';
+    }
+
+    function renderCrashCanvas() {
+      if (!crashCtx) return;
+      const w = crashCanvas.width, h = crashCanvas.height;
+      crashCtx.clearRect(0, 0, w, h);
+
+      if (state.crash.status === 'FLYING' || state.crash.status === 'CRASHED') {
+        const elapsed = (Date.now() - state.crash.startTime) / 1000;
+        const progress = Math.min(1, elapsed / 8);
+        const startX = 30, startY = h - 25;
+        const targetX = startX + (w - 60) * progress;
+        const currentY = startY - (h - 60) * Math.min(1, (state.crash.multiplier - 1) / 5);
+
+        crashCtx.beginPath();
+        crashCtx.moveTo(startX, startY);
+        crashCtx.quadraticCurveTo(startX + (targetX - startX) * 0.5, startY, targetX, currentY);
+        crashCtx.strokeStyle = state.crash.status === 'CRASHED' ? '#FF2E63' : '#9FFE00';
+        crashCtx.lineWidth = 4;
+        crashCtx.stroke();
+      }
+    }
+
+    function renderCrashHistory() {
+      const container = document.getElementById('crashHistory');
+      container.innerHTML = state.crash.history.map(val => {
+        const isHigh = val >= 2.0;
+        const color = isHigh ? 'bg-versa-green/10 border-versa-green text-versa-green' : 'bg-versa-red/10 border-versa-red text-versa-red';
+        return `<span class="px-2 py-0.5 border rounded text-[11px] font-cyber font-bold ${color}">${val.toFixed(2)}x</span>`;
+      }).join('');
+    }
+
+    /* Game 2: Cyber Slots */
+    function spinSlots() {
+      if (state.slots.isSpinning) return;
+      const betAmt = parseFloat(document.getElementById('slotsBetAmount').value) || 0;
+      if (betAmt <= 0 || betAmt > state.balance) { openDepositModal(); return; }
+
+      audio.playClick();
+      state.balance -= betAmt;
+      updateBalanceDisplay();
+      state.slots.isSpinning = true;
+
+      const btn = document.getElementById('spinSlotsBtn');
+      btn.innerText = 'ВРАЩЕНИЕ...';
+      btn.disabled = true;
+
+      const r1 = document.getElementById('reel1'), r2 = document.getElementById('reel2'), r3 = document.getElementById('reel3');
+      [r1, r2, r3].forEach(r => r.classList.add('slot-spinning'));
+
+      let ticks = 0;
+      const spinInterval = setInterval(() => {
+        ticks++;
+        r1.innerText = state.slots.symbols[Math.floor(Math.random() * state.slots.symbols.length)];
+        r2.innerText = state.slots.symbols[Math.floor(Math.random() * state.slots.symbols.length)];
+        r3.innerText = state.slots.symbols[Math.floor(Math.random() * state.slots.symbols.length)];
+
+        if (ticks > 16) {
+          clearInterval(spinInterval);
+          const symbols = state.slots.symbols;
+          const s1 = symbols[Math.floor(Math.random() * symbols.length)];
+          const s2 = symbols[Math.floor(Math.random() * symbols.length)];
+          const s3 = symbols[Math.floor(Math.random() * symbols.length)];
+
+          r1.innerText = s1; r2.innerText = s2; r3.innerText = s3;
+          [r1, r2, r3].forEach(r => r.classList.remove('slot-spinning'));
+
+          let mult = 0;
+          if (s1 === s2 && s2 === s3) mult = state.slots.payMultipliers[s1] || 10;
+          else if (s1 === s2 || s2 === s3 || s1 === s3) mult = 1.5;
+
+          btn.innerText = 'КРУТИТЬ БАРАБАНЫ 🎰';
+          btn.disabled = false;
+          state.slots.isSpinning = false;
+
+          if (mult > 0) {
+            audio.playWin();
+            const payout = betAmt * mult;
+            state.balance += payout;
+            updateBalanceDisplay();
+            document.getElementById('slotsWinBanner').innerHTML = `<span class="text-lg font-black text-versa-green font-cyber">ПОБЕДА! +${payout.toFixed(2)} $VSC (${mult}x)</span>`;
+            pushLiveBetRow('ВЫ', 'CYBER SLOTS', betAmt, mult, payout, true);
+          } else {
+            document.getElementById('slotsWinBanner').innerHTML = '<span class="text-sm text-versa-red font-cyber">НЕТ СОВПАДЕНИЙ - ПОПРОБУЙТЕ ЕЩЕ</span>';
+            pushLiveBetRow('ВЫ', 'CYBER SLOTS', betAmt, 0, 0, false);
+          }
+        }
+      }, 80);
+    }
+
+    /* Game 3: Versa Coinflip */
+    function selectCoinSide(side) {
+      audio.playClick();
+      state.coinflip.selectedSide = side;
+      document.getElementById('sideBtnGreen').style.opacity = side === 'green' ? '1' : '0.6';
+      document.getElementById('sideBtnRed').style.opacity = side === 'red' ? '1' : '0.6';
+    }
+
+    function flipCoin() {
+      if (state.coinflip.isFlipping) return;
+      const betAmt = parseFloat(document.getElementById('coinflipBetAmount').value) || 0;
+      if (betAmt <= 0 || betAmt > state.balance) { openDepositModal(); return; }
+
+      audio.playClick();
+      state.balance -= betAmt;
+      updateBalanceDisplay();
+      state.coinflip.isFlipping = true;
+
+      const coin = document.getElementById('coinElement');
+      const won = Math.random() >= 0.5;
+      const targetSide = won ? state.coinflip.selectedSide : (state.coinflip.selectedSide === 'green' ? 'red' : 'green');
+      const targetAngle = targetSide === 'green' ? 1800 : 1980;
+
+      coin.style.transform = `rotateY(${targetAngle}deg)`;
+
+      setTimeout(() => {
+        state.coinflip.isFlipping = false;
+        if (won) {
+          audio.playWin();
+          const payout = betAmt * 1.98;
+          state.balance += payout;
+          updateBalanceDisplay();
+          document.getElementById('coinStatusText').innerHTML = `<span class="text-versa-green font-black">ВЫИГРЫШ! +${payout.toFixed(2)} $VSC</span>`;
+          pushLiveBetRow('ВЫ', 'VERSA COINFLIP', betAmt, 1.98, payout, true);
+        } else {
+          document.getElementById('coinStatusText').innerHTML = `<span class="text-versa-red font-black">ПРОИГРЫШ! ВЫПАЛО: ${targetSide.toUpperCase()}</span>`;
+          pushLiveBetRow('ВЫ', 'VERSA COINFLIP', betAmt, 0, 0, false);
+        }
+      }, 1500);
+    }
+
+    /* Game 4: Cyber Mines Logic */
+    function initMinesGrid() {
+      const grid = document.getElementById('minesGrid');
+      grid.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'mine-tile bg-versa-card border border-versa-cardborder rounded-xl h-14 sm:h-16 flex items-center justify-center font-black text-lg text-white disabled:opacity-80';
+        btn.onclick = () => revealMineTile(i);
+        btn.dataset.index = i;
+        btn.innerText = '💎';
+        grid.appendChild(btn);
+      }
+    }
+
+    function updateMinesInfo() {
+      const count = parseInt(document.getElementById('minesCount').value);
+      state.mines.minesCount = count;
+      document.getElementById('minesNextMult').innerText = (1 + count * 0.08).toFixed(2) + 'x';
+    }
+
+    function startMinesGame() {
+      const betAmt = parseFloat(document.getElementById('minesBetAmount').value) || 0;
+      if (betAmt <= 0 || betAmt > state.balance) { openDepositModal(); return; }
+
+      audio.playClick();
+      state.balance -= betAmt;
+      updateBalanceDisplay();
+
+      state.mines.active = true;
+      state.mines.betAmount = betAmt;
+      state.mines.revealedCount = 0;
+      state.mines.currentMult = 1.00;
+
+      // Generate Mine Positions
+      const positions = [];
+      while (positions.length < state.mines.minesCount) {
+        const rand = Math.floor(Math.random() * 25);
+        if (!positions.includes(rand)) positions.push(rand);
+      }
+      state.mines.minePositions = positions;
+
+      initMinesGrid();
+      document.getElementById('minesStatusText').innerText = 'ОТКРЫВАЙТЕ КЛЕТКИ!';
+
+      const startBtn = document.getElementById('minesStartBtn');
+      startBtn.innerText = 'ЗАБРАТЬ (CASH OUT)';
+      startBtn.onclick = cashoutMines;
+      startBtn.className = 'w-full py-4 bg-versa-green hover:bg-versa-greenhover text-black font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-versa-glow';
+    }
+
+    function revealMineTile(index) {
+      if (!state.mines.active) return;
+      audio.playClick();
+
+      const tile = document.querySelector(`.mine-tile[data-index='${index}']`);
+      if (tile.disabled) return;
+
+      tile.disabled = true;
+
+      if (state.mines.minePositions.includes(index)) {
+        // BOOM!
+        audio.playCrashSound();
+        tile.innerText = '💣';
+        tile.classList.add('bg-versa-red/20', 'border-versa-red');
+        endMinesGame(false);
+      } else {
+        // SAFE!
+        audio.playWin();
+        tile.innerText = '⚡';
+        tile.classList.add('bg-versa-green/20', 'border-versa-green');
+        state.mines.revealedCount++;
+        state.mines.currentMult = parseFloat((state.mines.currentMult + 0.15 * (state.mines.minesCount / 3)).toFixed(2));
+
+        document.getElementById('minesCurrentMult').innerText = state.mines.currentMult.toFixed(2) + 'x';
+        document.getElementById('minesNextMult').innerText = (state.mines.currentMult + 0.15 * (state.mines.minesCount / 3)).toFixed(2) + 'x';
+
+        document.getElementById('minesStatusText').innerText = `ОТКРЫТО: ${state.mines.revealedCount} КЛЕТОК (МНОЖИТЕЛЬ ${state.mines.currentMult.toFixed(2)}x)`;
+      }
+    }
+
+    function cashoutMines() {
+      if (!state.mines.active || state.mines.revealedCount === 0) return;
+      const payout = state.mines.betAmount * state.mines.currentMult;
+      audio.playWin();
+      state.balance += payout;
+      updateBalanceDisplay();
+      pushLiveBetRow('ВЫ', 'CYBER MINES', state.mines.betAmount, state.mines.currentMult, payout, true);
+      document.getElementById('minesStatusText').innerHTML = `<span class="text-versa-green font-black">ВЫИГРЫШ: +${payout.toFixed(2)} $VSC</span>`;
+      endMinesGame(true);
+    }
+
+    function endMinesGame(won) {
+      state.mines.active = false;
+      if (!won) {
+        document.getElementById('minesStatusText').innerHTML = '<span class="text-versa-red font-black">ВЗРЫВ! ВЫ НАСТУПИЛИ НА МИНУ</span>';
+        pushLiveBetRow('ВЫ', 'CYBER MINES', state.mines.betAmount, 0, 0, false);
+      }
+
+      // Show all mines
+      state.mines.minePositions.forEach(idx => {
+        const tile = document.querySelector(`.mine-tile[data-index='${idx}']`);
+        if (tile) { tile.innerText = '💣'; tile.disabled = true; }
+      });
+
+      const startBtn = document.getElementById('minesStartBtn');
+      startBtn.innerText = 'НАЧАТЬ ИГРУ 💣';
+      startBtn.onclick = startMinesGame;
+      startBtn.className = 'w-full py-4 bg-versa-purple hover:bg-purple-600 text-white font-black text-xl rounded-xl uppercase tracking-wider shimmer-btn shadow-purple-glow';
+    }
+
+    /* Live Feed & Leaderboard */
+    const mockPlayers = ['s1mple_77', 'ZywOo_CS', 'm0NESY_v', 'NiKo_VERSA', 'b1t_god', 'donk_1', 'shroud_99', 'Apex_King'];
+    const mockGames = ['VERSA CRASH', 'CYBER SLOTS', 'VERSA COINFLIP', 'CYBER MINES'];
+
+    function pushLiveBetRow(player, game, bet, mult, payout, win) {
+      const body = document.getElementById('liveBetsBody');
+      const tr = document.createElement('tr');
+      tr.className = 'hover:bg-versa-accent/40 transition-colors';
+      const winColor = win ? 'text-versa-green' : 'text-gray-500';
+
+      tr.innerHTML = `
+        <td class="py-2.5 font-bold text-white">${player}</td>
+        <td class="py-2.5 font-cyber text-gray-400 text-[11px]">${game}</td>
+        <td class="py-2.5 font-cyber font-bold text-gray-200">${bet.toFixed(0)} $VSC</td>
+        <td class="py-2.5 font-cyber font-bold ${winColor}">${mult > 0 ? mult.toFixed(2) + 'x' : '0.00x'}</td>
+        <td class="py-2.5 font-cyber font-black text-right ${winColor}">${payout > 0 ? '+' + payout.toFixed(2) : '0.00'}</td>
+      `;
+
+      body.insertBefore(tr, body.firstChild);
+      if (body.children.length > 8) body.removeChild(body.lastChild);
+    }
+
+    function simulateLiveBets() {
+      const player = mockPlayers[Math.floor(Math.random() * mockPlayers.length)];
+      const game = mockGames[Math.floor(Math.random() * mockGames.length)];
+      const bet = Math.floor(Math.random() * 800) + 50;
+      const win = Math.random() > 0.45;
+      const mult = win ? parseFloat((Math.random() * 4 + 1.1).toFixed(2)) : 0;
+      pushLiveBetRow(player, game, bet, mult, win ? bet * mult : 0, win);
+    }
+
+    function renderLeaderboard() {
+      const leaderboard = [
+        { name: 'ZywOo_CS', profit: '142,500 $VSC', avatar: '🥇' },
+        { name: 's1mple_77', profit: '118,200 $VSC', avatar: '🥈' },
+        { name: 'Versa_Pro', profit: '94,000 $VSC', avatar: '🥉' },
+        { name: 'm0NESY_v', profit: '76,500 $VSC', avatar: '4' },
+      ];
+
+      document.getElementById('leaderboardList').innerHTML = leaderboard.map(item => `
+        <div class="flex items-center justify-between p-2 bg-versa-black/50 border border-versa-cardborder rounded-lg">
+          <div class="flex items-center space-x-2.5">
+            <span class="font-cyber font-black text-xs text-versa-green">${item.avatar}</span>
+            <span class="font-bold text-xs text-white">${item.name}</span>
+          </div>
+          <span class="font-cyber font-extrabold text-xs text-versa-green">${item.profit}</span>
+        </div>
+      `).join('');
+    }
+
+    window.onload = function() {
+      updateBalanceDisplay();
+      renderCrashHistory();
+      renderLeaderboard();
+      initMinesGrid();
+      startCrashLoop();
+
+      for (let i = 0; i < 5; i++) simulateLiveBets();
+      setInterval(simulateLiveBets, 2500);
+    };
+  </script>
+</body>
+</html>
