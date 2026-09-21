@@ -171,3 +171,14 @@ app.get('*', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Сервер VERSA CASINO запущен на порту ${PORT}`);
 });
+
+// ... ваш основной код сервера ...
+
+app.use(express.static('public'));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// Добавьте эту строку в самый конец файла server.js:
+module.exports = app;
